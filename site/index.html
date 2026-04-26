@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project Sub Three — 26.2 miles under 3 hours</title>
+  <meta name="description" content="An AI training companion for runners chasing the sub-three marathon. Get to know your running, train smarter, and find out if you've got one in you.">
+  <meta property="og:title" content="Project Sub Three">
+  <meta property="og:description" content="26.2 miles under 3 hours. Join the chase.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://www.projectsubthree.com">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      background: #0a0a0a;
+      color: #f5f5f0;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4rem 2rem;
+      max-width: 720px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .hero::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-line {
+      font-size: 11px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: rgba(245,245,240,0.4);
+      margin-bottom: 1rem;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .hero-title {
+      font-size: clamp(56px, 12vw, 96px);
+      font-weight: 900;
+      line-height: 0.92;
+      letter-spacing: -3px;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero-title span {
+      display: block;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    .hero-sub {
+      font-size: 14px;
+      color: rgba(245,245,240,0.35);
+      margin-bottom: 3.5rem;
+      font-weight: 300;
+      letter-spacing: 1px;
+      opacity: 0;
+    }
+
+    .time-display {
+      font-size: clamp(36px, 8vw, 56px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin-bottom: 2.5rem;
+      font-variant-numeric: tabular-nums;
+      opacity: 0;
+    }
+
+    .time-display .colon {
+      color: rgba(245,245,240,0.3);
+    }
+
+    .pace-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: rgba(245,245,240,0.08);
+      margin-bottom: 3rem;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .pace-item {
+      background: #0a0a0a;
+      padding: 1.25rem 1rem;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(12px);
+    }
+
+    .pace-value {
+      font-size: clamp(22px, 4vw, 28px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pace-label {
+      font-size: 11px;
+      color: rgba(245,245,240,0.35);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .tagline {
+      font-size: 15px;
+      color: rgba(245,245,240,0.5);
+      line-height: 1.7;
+      max-width: 460px;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .tagline em {
+      color: rgba(245,245,240,0.7);
+      font-style: normal;
+      font-weight: 400;
+    }
+
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
+    .cta-input {
+      background: rgba(245,245,240,0.06);
+      border: 1px solid rgba(245,245,240,0.12);
+      color: #f5f5f0;
+      padding: 14px 16px;
+      font-size: 14px;
+      border-radius: 4px;
+      flex: 1;
+      max-width: 300px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .cta-input::placeholder {
+      color: rgba(245,245,240,0.25);
+    }
+
+    .cta-input:focus {
+      border-color: rgba(245,245,240,0.35);
+    }
+
+    .cta-btn {
+      background: #f5f5f0;
+      color: #0a0a0a;
+      border: none;
+      padding: 14px 28px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+    }
+
+    .cta-btn:hover {
+      opacity: 0.85;
+    }
+
+    .cta-btn:active {
+      transform: scale(0.98);
+    }
+
+    .footer-line {
+      margin-top: 4rem;
+      font-size: 11px;
+      color: rgba(245,245,240,0.2);
+      letter-spacing: 1px;
+      opacity: 0;
+    }
+
+    .anim-in {
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+
+    .confirmation {
+      display: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+
+    .confirmation.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .confirm-time {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .confirm-text {
+      font-size: 14px;
+      color: rgba(245,245,240,0.5);
+      font-weight: 300;
+    }
+
+    @media (max-width: 480px) {
+      .hero { padding: 3rem 1.5rem; }
+      .cta-row { flex-direction: column; align-items: stretch; }
+      .cta-input { max-width: 100%; }
+      .cta-btn { text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="hero">
+    <div class="brand-line" id="brandLine">Project</div>
+    <h1 class="hero-title">
+      <span id="titleSub">SUB</span>
+      <span id="titleThree">THREE</span>
+    </h1>
+    <p class="hero-sub" id="heroSub">26.2 miles under 3 hours</p>
+
+    <div class="time-display" id="timeDisplay">
+      <span id="timeH">3</span><span class="colon">:</span><span id="timeM">00</span><span class="colon">:</span><span id="timeS">00</span>
+    </div>
+
+    <div class="pace-grid">
+      <div class="pace-item" id="pace1">
+        <div class="pace-value" id="paceVal1">0:00</div>
+        <div class="pace-label">min / mile</div>
+      </div>
+      <div class="pace-item" id="pace2">
+        <div class="pace-value" id="paceVal2">0:00</div>
+        <div class="pace-label">min / km</div>
+      </div>
+      <div class="pace-item" id="pace3">
+        <div class="pace-value" id="paceVal3">0.0</div>
+        <div class="pace-label">mph</div>
+      </div>
+    </div>
+
+    <p class="tagline" id="tagline">
+      This isn't for everyone. But if you're the kind of runner who thinks about pace in the shower and adds an extra mile just to hit a round number — <em>you might have a sub-three in you.</em> Let us get to know you and find out.
+    </p>
+
+    <form class="cta-row" id="ctaRow" action="https://formspree.io/f/xpqknlqp" method="POST">
+      <input type="email" name="email" class="cta-input" placeholder="your@email.com" required />
+      <button type="submit" class="cta-btn">Join the chase</button>
+    </form>
+
+    <div class="confirmation" id="confirmation">
+      <span class="confirm-time">2:59:59</span>
+      <span class="confirm-text">You're in. The chase starts soon.</span>
+    </div>
+
+    <div class="footer-line" id="footerLine">projectsubthree.com</div>
+  </main>
+
+  <script>
+    function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+    function animateValue(el, startVal, endVal, duration, formatter) {
+      var startTime = performance.now();
+      function update(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        var eased = easeOutCubic(progress);
+        var current = startVal + (endVal - startVal) * eased;
+        el.textContent = formatter(current);
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    function fadeIn(el, delay) {
+      setTimeout(function() { el.classList.add('anim-in'); }, delay);
+    }
+
+    function countdownTime() {
+      var timeDisplay = document.getElementById('timeDisplay');
+      var timeH = document.getElementById('timeH');
+      var timeM = document.getElementById('timeM');
+      var timeS = document.getElementById('timeS');
+
+      timeDisplay.style.opacity = '1';
+
+      var totalSeconds = 3 * 60 * 60;
+      var targetSeconds = 2 * 3600 + 59 * 60 + 59;
+      var totalSteps = totalSeconds - targetSeconds;
+      var duration = 2000;
+      var startTime = performance.now();
+
+      function update(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        var eased = easeOutCubic(progress);
+        var currentTotal = Math.round(totalSeconds - (totalSteps * eased));
+
+        var h = Math.floor(currentTotal / 3600);
+        var m = Math.floor((currentTotal % 3600) / 60);
+        var s = currentTotal % 60;
+
+        timeH.textContent = h;
+        timeM.textContent = String(m).padStart(2, '0');
+        timeS.textContent = String(s).padStart(2, '0');
+
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+    }
+
+    function runPaceAnimations() {
+      animateValue(document.getElementById('paceVal1'), 0, 411, 1400, function(v) {
+        var mins = Math.floor(v / 60);
+        var secs = Math.round(v % 60);
+        return mins + ':' + String(secs).padStart(2, '0');
+      });
+
+      animateValue(document.getElementById('paceVal2'), 0, 255, 1400, function(v) {
+        var mins = Math.floor(v / 60);
+        var secs = Math.round(v % 60);
+        return mins + ':' + String(secs).padStart(2, '0');
+      });
+
+      animateValue(document.getElementById('paceVal3'), 0, 8.8, 1400, function(v) {
+        return v.toFixed(1);
+      });
+    }
+
+    // Handle form submission via AJAX so we stay on the page
+    document.getElementById('ctaRow').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var form = this;
+      var btn = form.querySelector('.cta-btn');
+      btn.textContent = '...';
+
+      fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'Accept': 'application/json' }
+      }).then(function(response) {
+        if (response.ok) {
+          form.style.display = 'none';
+          var confirm = document.getElementById('confirmation');
+          confirm.classList.add('show');
+        } else {
+          btn.textContent = 'Try again';
+        }
+      }).catch(function() {
+        btn.textContent = 'Try again';
+      });
+    });
+
+    // Run animations on load
+    setTimeout(function() {
+      fadeIn(document.getElementById('brandLine'), 0);
+      fadeIn(document.getElementById('titleSub'), 200);
+      fadeIn(document.getElementById('titleThree'), 400);
+      fadeIn(document.getElementById('heroSub'), 700);
+
+      setTimeout(countdownTime, 1000);
+
+      var paces = document.querySelectorAll('.pace-item');
+      setTimeout(function() {
+        paces.forEach(function(p, i) { fadeIn(p, i * 150); });
+        runPaceAnimations();
+      }, 2200);
+
+      fadeIn(document.getElementById('tagline'), 3200);
+      fadeIn(document.getElementById('ctaRow'), 3600);
+      fadeIn(document.getElementById('footerLine'), 4000);
+    }, 300);
+  </script>
+</body>
+</html>

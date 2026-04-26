@@ -1,0 +1,33 @@
+{
+  "source": "Daniel's Running Formula, Figure 1.5 — Jack Daniels, PhD",
+  "description": "The principle of diminishing returns: as weekly mileage increases, the percentage of running potential achieved rises steeply at first, then flattens. Extracted/approximated from the published curve.",
+  "note": "These values represent SUSTAINED weekly mileage, not single-week spikes. A runner must maintain a mileage level through progressive training cycles for the adaptation to count.",
+  "data": [
+    { "miles_per_week": 0, "percent_potential": 0 },
+    { "miles_per_week": 5, "percent_potential": 25 },
+    { "miles_per_week": 10, "percent_potential": 42 },
+    { "miles_per_week": 15, "percent_potential": 55 },
+    { "miles_per_week": 20, "percent_potential": 65 },
+    { "miles_per_week": 25, "percent_potential": 73 },
+    { "miles_per_week": 30, "percent_potential": 78 },
+    { "miles_per_week": 35, "percent_potential": 83 },
+    { "miles_per_week": 40, "percent_potential": 86 },
+    { "miles_per_week": 45, "percent_potential": 89 },
+    { "miles_per_week": 50, "percent_potential": 91 },
+    { "miles_per_week": 55, "percent_potential": 93 },
+    { "miles_per_week": 60, "percent_potential": 94 },
+    { "miles_per_week": 65, "percent_potential": 95 },
+    { "miles_per_week": 70, "percent_potential": 96 },
+    { "miles_per_week": 75, "percent_potential": 96.5 },
+    { "miles_per_week": 80, "percent_potential": 97 },
+    { "miles_per_week": 85, "percent_potential": 97.5 },
+    { "miles_per_week": 90, "percent_potential": 98 },
+    { "miles_per_week": 95, "percent_potential": 98.5 },
+    { "miles_per_week": 100, "percent_potential": 99 }
+  ],
+  "sub_three_zone": {
+    "min_miles": 60,
+    "max_miles": 80,
+    "note": "Target sustained weekly mileage range for sub-three marathon training. Beyond 80 may not provide meaningful additional benefit for the sub-three goal."
+  }
+}
