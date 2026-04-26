@@ -94,4 +94,16 @@ A running record of what we built, why, and what we learned. Raw material for fu
 - `runner_context_model.md` — the coaching brain (living document)
 - `data/daniels_diminishing_returns.json` — extracted curve data for algorithms
 
-**Next:** Dig into specific Daniels concepts (VDOT, pace zones, phase structure). Begin sketching the AI companion interaction model. Story page for the website.
+**Later in the session — VDOT, weighted miles, and race-day factors:**
+- Defined VDOT 54 as the sub-three target — captured race equivalencies (5K 18:40, 10K 38:42, half 1:25:40) and all five training paces (easy 8:00, marathon 6:49, threshold 6:26, interval 88s/400m, rep 82s/400m)
+- Created `data/vdot_54_reference.json` for use in algorithms
+- Developed the "weighted miles" concept — a practical alternative to Daniels' time-based point system. Stays in miles (intuitive for runners) but applies intensity multipliers. Key rule: weighted miles moderate load, they don't substitute for actual miles.
+- Documented race-day factors: altitude differential and course profile effects. Key insight: "humans are not wheels" — hilly courses cost more than they give back, even at net-zero elevation.
+- Restructured repo to put git at the project root (not inside site/). Updated Vercel root directory to `site/`.
+- Consolidated all open questions into a master list in the context model.
+
+**Files added/updated:**
+- `runner_context_model.md` — expanded with VDOT, weighted miles, race-day factors, master open questions, file index
+- `data/vdot_54_reference.json` — VDOT 54 paces and race equivalencies
+
+**Next:** Dig into Daniels' phase-based periodization. Begin sketching the AI companion interaction model (onboarding flow, data input, conversation patterns). Story page for the website. Start working toward a prototype readiness calculator.

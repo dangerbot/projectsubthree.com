@@ -8,7 +8,44 @@ This document is a living draft. We're capturing dimensions one at a time, then 
 
 The training philosophy behind Project Sub Three is heavily inspired by **"Daniel's Running Formula" by Jack Daniels, PhD**. His coaching principles and research form the backbone of our approach — training paces, periodization, the science of physiological adaptation. We credit his work as the lead inspiration and will incorporate specific ideas and principles from the book into our system.
 
-Future sessions will pull out specific Daniels concepts (VDOT, training pace zones, phase-based periodization, etc.) and map them into our context model and coaching logic.
+Future sessions will pull out specific Daniels concepts (phase-based periodization, etc.) and map them into our context model and coaching logic.
+
+### VDOT 54 — the sub-three target
+
+Daniels' VDOT is a single-number fitness score that links race performances across distances. For sub-three, we target **VDOT 54**, which corresponds to a marathon time of 2:58:47.
+
+**Race equivalencies at VDOT 54:**
+
+| Distance | Time | What it tells us |
+|---|---|---|
+| 5K | 18:40 | Good sign — you have the raw speed |
+| 10K | 38:42 | Better sign — speed plus some endurance |
+| Half marathon | 1:25:40 | Strong sign — closest predictor of marathon ability |
+| Marathon | 2:58:47 | The target |
+
+Important: running a 5K in 18:40 does NOT mean you can race a sub-three marathon. The shorter the distance, the weaker the prediction — speed without endurance is not enough. A half marathon at 1:25:40 is a much stronger signal because it tests sustained effort closer to the actual demands.
+
+**Training paces at VDOT 54:**
+
+| Workout type | Pace | Purpose |
+|---|---|---|
+| Easy runs | 8:00/mile | Aerobic base — most miles here |
+| Marathon pace | 6:49/mile | Goal race effort (a few seconds faster than 6:51 for buffer) |
+| Threshold | 6:26/mile | Lactate threshold work — intervals and steady state |
+| Interval | 88 sec/400m | VO2max development — short hard efforts |
+| Repetition | 82 sec/400m | Neuromuscular/mechanics (unlikely to use, for reference) |
+
+These paces are what the AI companion will prescribe for workouts once a runner's context supports quality training. Data stored in `data/vdot_54_reference.json`.
+
+**How VDOT connects to the readiness model:** A runner's current VDOT (estimated from recent race results or time trials) compared to the target VDOT of 54 is one of the clearest signals of how close they are. If their current half marathon time implies VDOT 48, we know exactly how much fitness needs to be built — and the training paces adjust accordingly until they reach 54.
+
+**VDOT is not static.** As a runner progresses through training, their VDOT will rise. Each time they race or time-trial, we get a new data point. Training paces should update with the new VDOT — a runner at VDOT 48 today trains at different easy/threshold/interval paces than they will at VDOT 52 six months from now. The companion should track VDOT over time as a key fitness trajectory signal.
+
+**Open questions — VDOT:**
+- Should we build a full VDOT lookup table into the system (not just 54) so we can prescribe paces at any level?
+- How often should VDOT be re-estimated? After every race? Periodically via time trials?
+- Can we estimate VDOT from workout data (e.g., threshold pace in training) rather than requiring a race?
+- How do we handle a runner whose 5K VDOT and half marathon VDOT don't match? (Speed without endurance, or endurance without speed — both are diagnostic.)
 
 ### Key data: The diminishing returns curve (Figure 1.5)
 
@@ -122,7 +159,7 @@ To get 6:51 below lactate threshold, the body needs fundamental changes:
 - **Muscles, tendons, ligaments, fascia strengthen** — more efficiency, less wasted energy
 - **Fat metabolism improves** — body learns to burn fat after carbohydrate stores are depleted
 
-**How do you get there? Miles. Miles and miles and miles.** Long, slow miles. Speed is not as important as volume. In fact, if running fast prevents you from running long, slow down so you can run farther. This is the single most important part of the training. It makes no sense to run fast if you haven't done the physiological adaptations that will allow you to run 6:51 below lactate threshold. Volume doesn't guarantee you'll get there, but without it, you have no chance.
+**How do you get there? Miles. Miles and miles and miles.** Long, slow miles. Speed is not as important as volume. In fact, if running fast prevents you from running long, slow down so you can run farther. At VDOT 54, easy pace is 8:00/mile — over a minute slower than race pace. Most runners run their easy days too fast, which adds fatigue without adding aerobic benefit, and compromises the quality sessions that actually build speed. This is the single most important part of the training. It makes no sense to run fast if you haven't done the physiological adaptations that will allow you to run 6:51 below lactate threshold. Volume doesn't guarantee you'll get there, but without it, you have no chance.
 
 ### What we track
 
@@ -208,6 +245,36 @@ These races give real data points on current fitness and can slot into training 
 ### Integration with training cycles
 
 Quality work is introduced in dedicated cycles after a mileage base is established. A cycle focused on quality still maintains the mileage volume — it doesn't trade miles for speed. The cycle's single purpose might shift from "build mileage" to "build threshold pace at current mileage" or "develop race-pace feel."
+
+### Weighted miles — a better way to measure training load
+
+**The problem:** Not all miles are equal. A mile at easy pace and a mile at threshold pace put very different stress on the body. Daniels addresses this with a points-per-minute system across intensities (easy ~10-15 pts/hr, marathon pace ~21-35 pts/hr, threshold ~35-40 pts/hr, and higher for faster work). But as a practical tool for runners, it's hard to follow.
+
+**Our approach: weighted miles.** Instead of converting to time-based points, we stay in miles (since we're training for a specific distance at a specific time) and apply a weight multiplier based on intensity. A threshold mile might count as 1.5 weighted miles. A mile of interval work might count as 2.0. Easy miles stay at 1.0. The exact conversion factors will be developed over time.
+
+**Daniels' argument for time over distance:** A pro and a recreational runner both running 10 minutes at the same relative effort cover very different distances. True — but since we're targeting a specific time (sub-3:00) for a specific distance (26.2 miles), we can apply a "special relativity" of sorts and stick with miles as the unit, weighting them to reflect actual stress.
+
+**Critical rule: weighted miles are NOT a substitute for actual miles.**
+- You cannot run faster to artificially inflate your way to 60 weighted miles on 40 actual miles. You NEED 60+ real miles as the aerobic base. The physiological adaptations require actual volume.
+- Weighted miles serve a different purpose: **moderating total training load when quality work is introduced.** When you add threshold intervals or tempo runs on top of base mileage, the weighted total goes up — even if actual mileage stays flat or drops slightly. This helps us monitor whether we're adding stress on stress.
+
+**How we'll use this:**
+- During base-building cycles: weighted miles ≈ actual miles (almost all easy running)
+- When quality cycles begin: actual mileage may drop slightly, but weighted miles should stay controlled — not spike
+- If weighted miles are climbing too fast relative to recent history → flag injury risk
+- The gap between actual and weighted miles tells us how much intensity is in the training mix
+
+**Conversion factors (TBD — to be refined):**
+
+| Intensity | Weight per mile | Notes |
+|---|---|---|
+| Easy / recovery | 1.0 | The foundation — most miles should be here |
+| Marathon pace | ~1.3-1.5 | Goal race effort |
+| Threshold / tempo | ~1.5-2.0 | Lactate threshold work |
+| Interval (VO2max) | ~2.0-2.5 | Short, hard efforts |
+| Repetition / sprint | ~2.5-3.0 | Neuromuscular, mechanics work |
+
+These are starting estimates. We'll calibrate based on Daniels' point system, real runner data, and Steve's experience.
 
 ### What we track (to develop)
 
@@ -300,5 +367,92 @@ _Steve will add more context dimensions over time. Candidates include:_
 - Body weight & composition trends
 - Sleep & lifestyle factors
 - Mental readiness / confidence signals
-- Weather & altitude considerations
 - Taper strategy & race-day planning
+
+---
+
+## Race-Day Factors (to be developed)
+
+These don't affect training directly but change the target — what "sub-three effort" actually requires on a given course. We'll need to adjust pace targets and probability estimates based on these.
+
+### Altitude differential
+
+If you train at a different elevation than race day, performance will be affected. Training at altitude and racing at sea level is generally an advantage. Training at sea level and racing at altitude is a disadvantage. We'll need to quantify this — how many seconds per mile does a given altitude differential cost or gain? TBD.
+
+### Course profile
+
+This one is nuanced. Even a course with zero net elevation change can be significantly harder than a flat course if it's hilly. The key insight: **humans are not wheels.**
+
+**Slight uphill** — we're actually fairly efficient at small grades, but it slows us down. The problem: to maintain 6:51 pace on an uphill, effort goes above lactate threshold. So we either slow down (and need to make it up elsewhere) or burn matches we don't have.
+
+**Slight downhill (0.5-1% grade)** — this may actually feel like how running "should" feel. Gravity assists without much braking cost. A net-downhill course with a gentle grade might genuinely be faster.
+
+**Steeper downhill (>1% grade)** — the "stored gravitational energy" argument breaks down. Unlike a wheel that rolls freely, a runner has to actively brake with every step. This is eccentric muscle loading — it's actually destructive to muscle fibers. The energy "gained" from gravity is lost to braking forces, and the quad damage accumulates for later miles.
+
+**Net effect:** A hilly course — even one that's net-zero elevation — will almost always be harder than a flat course. The time lost going uphill is greater than the time gained coming down. We may need to:
+- Adjust target pace based on course elevation profile
+- Adjust sub-three probability based on course difficulty
+- Potentially recommend specific hill training if the target race has a challenging profile
+- Help runners choose appropriate goal races (flat courses = better odds for a first sub-three attempt)
+
+**To develop:** A model that takes a course elevation profile and estimates the time cost relative to a flat course. Even a rough estimate would be valuable — "this course profile adds an estimated 2-3 minutes to your flat-equivalent time."
+
+---
+
+## Master Open Questions
+
+_Consolidated from all sections. These are the things we need to resolve as we build the algorithms and the companion experience._
+
+**Training progression:**
+- Exact rules for safe mileage increase per cycle — is the 10% rule right, or more nuanced?
+- At what mileage / cycle count does quality work get introduced?
+- How to periodize quality types across cycles (fartlek → threshold → race pace → taper?)
+- How many quality sessions per week at different training phases?
+- What % of weekly mileage should the long run be?
+- How to handle missed weeks (illness, travel, life) — how much fitness is lost and how fast to rebuild?
+
+**Measurement & scoring:**
+- Should we build a full VDOT table (not just 54) for pacing at any fitness level?
+- How to estimate VDOT from training data vs. requiring races?
+- How to handle mismatched VDOT across distances (speed vs. endurance gap)?
+- Weighted mile conversion factors — calibrate from Daniels points + real data
+- How to combine all dimensions into a single sub-three probability score?
+- How to model injury risk quantitatively?
+- How to estimate "weeks to 95% probability" — what's the formula?
+
+**Long runs:**
+- How to weight recency vs. lifetime long run experience?
+- Interaction between long run distance and long run pace?
+- Track total count of 20+ mile runs (lifetime and recent)?
+- How to handle a runner who insists on a "training marathon"?
+
+**Nutrition:**
+- How prescriptive should the AI be? (Suggestions vs. tracking vs. awareness?)
+- Integration with nutrition tracking tools?
+- Distinguishing cramp causes (fueling vs. electrolytes vs. dehydration vs. overexertion)
+- How to introduce fat-adapted training safely?
+
+**Race-day factors:**
+- Altitude differential impact — quantify seconds/mile cost or gain
+- Course profile time-cost model
+- Race selection guidance (which courses favor a first sub-three attempt?)
+
+**AI companion experience:**
+- Name for the companion (TBD)
+- Onboarding flow — what does the first conversation look like?
+- How does data get into the system? (Manual input? Strava/Garmin sync? Conversation?)
+- How often does the runner interact with the companion?
+- What triggers proactive outreach from the companion vs. waiting for the runner to check in?
+
+---
+
+## File Index
+
+| File | Purpose |
+|---|---|
+| `runner_context_model.md` | This file — the coaching brain |
+| `project_sub_three_brief.md` | Product brief and origin story |
+| `build_log.md` | Step-by-step record of the build journey |
+| `data/daniels_diminishing_returns.json` | Extracted curve data — mileage vs. % potential |
+| `data/vdot_54_reference.json` | VDOT 54 race equivalencies and training paces |
+| `site/index.html` | Animated hero landing page |

@@ -1,0 +1,41 @@
+{
+  "source": "Daniel's Running Formula — Jack Daniels, PhD",
+  "vdot": 54,
+  "description": "VDOT 54 is the target fitness level for a sub-three marathon. All race equivalencies and training paces below correspond to this VDOT.",
+
+  "race_equivalencies": {
+    "note": "Equivalent race times at VDOT 54. Hitting these times at shorter distances is a positive signal but does NOT guarantee marathon performance. Longer distances are stronger predictors.",
+    "5k": { "time": "18:40", "seconds": 1120, "signal_strength": "good sign" },
+    "10k": { "time": "38:42", "seconds": 2322, "signal_strength": "better sign" },
+    "half_marathon": { "time": "1:25:40", "seconds": 5140, "signal_strength": "strong sign" },
+    "marathon": { "time": "2:58:47", "seconds": 10727, "signal_strength": "target" }
+  },
+
+  "training_paces": {
+    "easy": {
+      "pace_per_mile": "8:00",
+      "seconds_per_mile": 480,
+      "purpose": "Aerobic base building — the foundation. Most weekly miles should be here."
+    },
+    "marathon": {
+      "pace_per_mile": "6:49",
+      "seconds_per_mile": 409,
+      "purpose": "Goal race pace practice. A few seconds faster than the 6:51 target to build a small buffer."
+    },
+    "threshold": {
+      "pace_per_mile": "6:26",
+      "seconds_per_mile": 386,
+      "purpose": "Lactate threshold work — intervals and steady-state efforts. Trains the body to clear lactate at higher intensities."
+    },
+    "interval": {
+      "pace_per_400m": "88 seconds",
+      "seconds_per_400m": 88,
+      "purpose": "VO2max development — short hard efforts to raise aerobic ceiling."
+    },
+    "repetition": {
+      "pace_per_400m": "82 seconds",
+      "seconds_per_400m": 82,
+      "purpose": "Neuromuscular / mechanics work. Unlikely to be used in sub-three training but included for reference."
+    }
+  }
+}
