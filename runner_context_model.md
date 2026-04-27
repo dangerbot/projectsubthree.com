@@ -434,8 +434,14 @@ _Consolidated from all sections. These are the things we need to resolve as we b
 
 **Race-day factors:**
 - Altitude differential impact — quantify seconds/mile cost or gain
-- Course profile time-cost model
+- Course profile time-cost model — give courses a difficulty score and adjust expectations/pacing
 - Race selection guidance (which courses favor a first sub-three attempt?)
+- Target race date alignment: what happens when the plan is too long for the date (honest conversation about readiness) or too short (how to fill time productively without overtraining)
+
+**Taper:**
+- 3-week taper structure before race day (volume drops, intensity maintained)
+- How aggressive should the taper be? (48 → 36 → 20 is a rough starting point)
+- How does taper interact with the readiness numbers? Probability should peak at race day, not at peak mileage.
 
 **AI companion experience:**
 - Name for the companion (TBD)
