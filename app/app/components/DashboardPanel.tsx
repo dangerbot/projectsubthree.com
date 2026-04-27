@@ -1,91 +1,144 @@
 "use client";
 
 import ReadinessNumbers from "./ReadinessNumbers";
-import WeeklyPlan from "./WeeklyPlan";
 import RunnerContext from "./RunnerContext";
+import TrainingPlanView, { PlanBuilding } from "./TrainingPlanView";
+import type { RunnerContext as RunnerContextType } from "../lib/runner-context";
+import type { TrainingPlan } from "../lib/training-plan";
 
-// Placeholder data — this will come from the runner context model + API later
-const mockReadiness = {
-  subThreeProbability: 34,
-  injuryRisk: "low" as const,
-  weeksTo95: 22,
-};
+type Tab = "context" | "plan" | "log" | "settings";
 
-const mockWeeklyPlan = {
-  cycleWeek: "Week 3 of 5",
-  phase: "Base Building",
-  workouts: [
-    {
-      day: "Mon",
-      type: "Easy Run",
-      description: "7 miles @ 8:00/mi — keep it conversational",
-      completed: true,
-    },
-    {
-      day: "Tue",
-      type: "Easy Run",
-      description: "6 miles @ 8:00/mi — recovery day",
-      completed: true,
-    },
-    {
-      day: "Wed",
-      type: "Threshold",
-      description: "2mi easy + 4×1mi @ 6:26 w/ 1min jog + 2mi easy",
-      completed: false,
-    },
-    {
-      day: "Thu",
-      type: "Easy Run",
-      description: "7 miles @ 8:00/mi",
-      completed: false,
-    },
-    {
-      day: "Fri",
-      type: "Rest",
-      description: "Full rest or easy 30min walk",
-      completed: false,
-    },
-    {
-      day: "Sat",
-      type: "Long Run",
-      description: "18 miles — first 14 easy, last 4 @ marathon pace (6:49)",
-      completed: false,
-    },
-    {
-      day: "Sun",
-      type: "Easy Run",
-      description: "5 miles @ 8:15/mi — shake out the legs",
-      completed: false,
-    },
-  ],
-};
+interface DashboardPanelProps {
+  runnerContext: RunnerContextType;
+  onContextUpdate: (context: RunnerContextType) => void;
+  trainingPlan: TrainingPlan | null;
+  activeTab: Tab;
+  onTabChange: (tab: Tab) => void;
+  isBuildingPlan: boolean;
+}
 
-const mockRunnerContext = {
-  sustainedMileage: 48,
-  peakMileage: 55,
-  longestRun: 18,
-  currentVdot: 47,
-  targetVdot: 54,
-  recentRaces: [
-    { distance: "Half Marathon", time: "1:32:14", date: "Mar 2026" },
-    { distance: "10K", time: "42:18", date: "Jan 2026" },
-    { distance: "5K", time: "20:02", date: "Dec 2025" },
-  ],
-};
+export default function DashboardPanel({
+  runnerContext,
+  onContextUpdate,
+  trainingPlan,
+  activeTab,
+  onTabChange,
+  isBuildingPlan,
+}: DashboardPanelProps) {
+  // Live readiness data from the AI's assessment
+  const readinessData = {
+    subThreeProbability: runnerContext.readiness?.probability ?? null,
+    injuryRisk: runnerContext.readiness?.injuryRisk ?? null,
+    weeksTo95: runnerContext.readiness?.weeksTo95 ?? null,
+  };
+  const tabs: { id: Tab; label: string; enabled: boolean }[] = [
+    { id: "context", label: "Context", enabled: true },
+    { id: "plan", label: "Plan", enabled: true },
+    { id: "log", label: "Log", enabled: false },
+    { id: "settings", label: "Settings", enabled: false },
+  ];
 
-export default function DashboardPanel() {
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-border">
-        <h2 className="text-sm font-semibold text-foreground">Dashboard</h2>
+    <div className="flex flex-col h-full bg-background">
+      {/* Fixed header: branding + readiness numbers */}
+      <div className="flex-shrink-0">
+        {/* Top bar */}
+        <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-foreground">Dashboard</h2>
+          </div>
+          <div className="text-right">
+            <div className="text-[9px] text-muted uppercase tracking-wider">
+              Target
+            </div>
+            <div className="text-sm font-mono font-bold text-accent">
+              2:59:59
+            </div>
+          </div>
+        </div>
+
+        {/* Readiness numbers — always visible */}
+        <div className="px-4 py-3 border-b border-border">
+          <ReadinessNumbers
+            data={readinessData}
+            factors={runnerContext.readiness?.factors}
+          />
+        </div>
+
+        {/* Tab navigation */}
+        <div className="flex border-b border-border">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => tab.enabled && onTabChange(tab.id)}
+              className={`flex-1 py-2.5 text-[11px] font-medium tracking-wide transition-colors relative ${
+                activeTab === tab.id
+                  ? "text-accent"
+                  : tab.enabled
+                    ? "text-muted hover:text-foreground"
+                    : "text-border-light cursor-not-allowed"
+              }`}
+            >
+              {tab.label}
+              {!tab.enabled && (
+                <span className="ml-1 text-[8px] text-border-light uppercase">
+                  soon
+                </span>
+              )}
+              {activeTab === tab.id && (
+                <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-accent rounded-full" />
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Content */}
-      <div className="p-5 space-y-4">
-        <ReadinessNumbers data={mockReadiness} />
-        <WeeklyPlan data={mockWeeklyPlan} />
-        <RunnerContext data={mockRunnerContext} />
+      {/* Scrollable tab content */}
+      <div className="flex-1 overflow-y-auto">
+        {activeTab === "context" && (
+          <div className="p-4">
+            <RunnerContext data={runnerContext} onUpdate={onContextUpdate} />
+          </div>
+        )}
+
+        {activeTab === "plan" && (
+          <div>
+            {isBuildingPlan ? (
+              <PlanBuilding />
+            ) : (
+              <TrainingPlanView plan={trainingPlan} />
+            )}
+          </div>
+        )}
+
+        {activeTab === "log" && (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="text-3xl font-mono font-bold text-border-light mb-3">
+              —
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-2">
+              Training Log
+            </h3>
+            <p className="text-xs text-muted max-w-xs leading-relaxed">
+              Track your completed workouts and notes here. Coming soon — once
+              you have a plan, this is where you&apos;ll log your progress.
+            </p>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <div className="text-3xl font-mono font-bold text-border-light mb-3">
+              —
+            </div>
+            <h3 className="text-sm font-semibold text-foreground mb-2">
+              Settings
+            </h3>
+            <p className="text-xs text-muted max-w-xs leading-relaxed">
+              Preferences, integrations, and account settings. Coming soon.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
