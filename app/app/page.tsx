@@ -7,7 +7,7 @@ import {
   EMPTY_CONTEXT,
   type RunnerContext,
 } from "./lib/runner-context";
-import type { TrainingPlan } from "./lib/training-plan";
+import { convertGeneratedPlan, type TrainingPlan } from "./lib/training-plan";
 
 type Tab = "context" | "plan" | "log" | "settings";
 
@@ -17,14 +17,24 @@ export default function Home() {
   const [trainingPlan, setTrainingPlan] = useState<TrainingPlan | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("context");
   const [isBuildingPlan, setIsBuildingPlan] = useState(false);
+  const [reviewTrigger, setReviewTrigger] = useState(0);
 
-  // Called when a plan is generated from chat
-  const handlePlanGenerated = (plan: TrainingPlan) => {
+  // Called when a plan is generated — handles both old <plan> block format
+  // and new tool-generated GeneratedPlan format
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handlePlanGenerated = (plan: any) => {
     setIsBuildingPlan(true);
     setActiveTab("plan");
+
+    // Detect if this is a GeneratedPlan (from tool) or TrainingPlan (from <plan> block)
+    const isEnginePlan = plan.phases && plan.weeks && plan.totalWeeks;
+    const convertedPlan: TrainingPlan = isEnginePlan
+      ? convertGeneratedPlan(plan)
+      : plan;
+
     // Brief delay to show the "building" animation, then reveal the plan
     setTimeout(() => {
-      setTrainingPlan(plan);
+      setTrainingPlan(convertedPlan);
       setIsBuildingPlan(false);
     }, 2000);
   };
@@ -37,6 +47,7 @@ export default function Home() {
           onContextUpdate={setRunnerContext}
           runnerContext={runnerContext}
           onPlanGenerated={handlePlanGenerated}
+          reviewTrigger={reviewTrigger}
         />
       </div>
 
@@ -52,6 +63,7 @@ export default function Home() {
           activeTab={activeTab}
           onTabChange={setActiveTab}
           isBuildingPlan={isBuildingPlan}
+          onRequestReview={() => setReviewTrigger((n) => n + 1)}
         />
       </div>
     </div>

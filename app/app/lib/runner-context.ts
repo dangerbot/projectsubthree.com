@@ -15,7 +15,8 @@ export interface ReadinessAssessment {
   probability: number; // 0-100
   injuryRisk: "low" | "moderate" | "elevated" | "high";
   weeksTo95: number | null; // estimated weeks to 95% probability
-  factors: ReadinessFactor[];
+  factors: ReadinessFactor[]; // probability factors
+  injuryFactors: ReadinessFactor[]; // injury risk factors
 }
 
 export interface RunnerContext {
@@ -140,6 +141,15 @@ export function parseContextFromMessage(
             weeksTo95: parsed.readiness.weeksTo95 ?? null,
             factors: Array.isArray(parsed.readiness.factors)
               ? parsed.readiness.factors.map(
+                  (f: { name?: string; score?: number; note?: string }) => ({
+                    name: f.name || "",
+                    score: f.score || 1,
+                    note: f.note || "",
+                  })
+                )
+              : [],
+            injuryFactors: Array.isArray(parsed.readiness.injuryFactors)
+              ? parsed.readiness.injuryFactors.map(
                   (f: { name?: string; score?: number; note?: string }) => ({
                     name: f.name || "",
                     score: f.score || 1,

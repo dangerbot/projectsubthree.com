@@ -31,6 +31,58 @@ export interface TrainingPlan {
 export const EMPTY_PLAN: TrainingPlan | null = null;
 
 /**
+ * Convert a GeneratedPlan (from the plan engine) into the TrainingPlan format
+ * that the frontend currently renders. This is a bridge until we upgrade
+ * TrainingPlanView to render GeneratedPlan directly.
+ */
+export function convertGeneratedPlan(generated: {
+  phases?: Array<{ name: string; shortName: string; description: string; startWeek: number; endWeek: number }>;
+  weeks?: Array<{
+    weekNumber: number;
+    phaseName: string;
+    phaseShortName: string;
+    isRestWeek: boolean;
+    totalMiles: number;
+    workouts: Array<{
+      day: string;
+      miles: number | null;
+      type: string;
+      description: string;
+    }>;
+  }>;
+  totalWeeks?: number;
+  generatedAt?: string;
+}): TrainingPlan {
+  // Group weeks by phase for the summary
+  const phaseName = generated.phases?.[0]?.name ?? "Training Plan";
+  const summary = generated.phases
+    ?.map((p) => `${p.shortName} (${p.startWeek}-${p.endWeek})`)
+    .join(" → ") ?? "";
+
+  return {
+    phase: `${generated.totalWeeks ?? 0}-Week Plan`,
+    summary: `${phaseName} through Race Week. ${summary}`,
+    weeks: (generated.weeks ?? []).map((w) => ({
+      weekNumber: w.weekNumber,
+      label: `Week ${w.weekNumber} — ${w.phaseShortName}${w.isRestWeek ? " (Rest)" : ""}`,
+      totalMiles: String(w.totalMiles),
+      workouts: w.workouts.map((wo) => ({
+        day: wo.day,
+        type: (wo.type === "threshold" || wo.type === "yasso" || wo.type === "fartlek"
+          ? "tempo"
+          : wo.type === "race-pace-long"
+            ? "long"
+            : wo.type) as Workout["type"],
+        distance: wo.miles !== null ? String(wo.miles) : null,
+        description: wo.description,
+        completed: false,
+      })),
+    })),
+    generatedAt: generated.generatedAt ?? new Date().toISOString(),
+  };
+}
+
+/**
  * Parse a training plan from a companion message.
  * Looks for <plan>...</plan> JSON block at the end of the message.
  */

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import MessageContent from "./MessageContent";
+import ThinkingBolt from "./ThinkingBolt";
 import {
   parseContextFromMessage,
   type RunnerContext,
@@ -35,12 +36,14 @@ interface ChatPanelProps {
   onContextUpdate: (context: RunnerContext) => void;
   runnerContext: RunnerContext;
   onPlanGenerated: (plan: TrainingPlan) => void;
+  reviewTrigger?: number;
 }
 
 export default function ChatPanel({
   onContextUpdate,
   runnerContext,
   onPlanGenerated,
+  reviewTrigger = 0,
 }: ChatPanelProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [hasStarted, setHasStarted] = useState(false);
@@ -53,6 +56,58 @@ export default function ChatPanel({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Track reviewTrigger — when it increments (from dashboard CTA), send context review
+  const prevTriggerRef = useRef(reviewTrigger);
+  useEffect(() => {
+    if (reviewTrigger > 0 && reviewTrigger !== prevTriggerRef.current) {
+      prevTriggerRef.current = reviewTrigger;
+      const summary = buildContextSummary();
+      sendMessage(
+        `Read and review my updated runner context:\n${summary}`
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewTrigger]);
+
+  // Build a context summary for the "review my context" flow
+  const buildContextSummary = (): string => {
+    const ctx = runnerContext;
+    const parts: string[] = [];
+    if (ctx.now.weeklyMileage) parts.push(`Weekly mileage: ${ctx.now.weeklyMileage}`);
+    if (ctx.now.longestRun) parts.push(`Longest recent run: ${ctx.now.longestRun} mi`);
+    if (ctx.now.runsPerWeek) parts.push(`Runs per week: ${ctx.now.runsPerWeek}`);
+    if (ctx.now.currentFeeling) parts.push(`Current feeling: ${ctx.now.currentFeeling}`);
+    if (ctx.past.marathonsRun) parts.push(`Marathons run: ${ctx.past.marathonsRun}`);
+    if (ctx.past.bestMarathon) parts.push(`Best marathon: ${ctx.past.bestMarathon}`);
+    if (ctx.past.bestMarathonDate) parts.push(`Best marathon date: ${ctx.past.bestMarathonDate}`);
+    if (ctx.past.lastMarathon) parts.push(`Last marathon: ${ctx.past.lastMarathon}`);
+    if (ctx.past.lastMarathonTime) parts.push(`Last marathon time: ${ctx.past.lastMarathonTime}`);
+    if (ctx.past.bestHalf) parts.push(`Best half: ${ctx.past.bestHalf}`);
+    if (ctx.past.peakMileage) parts.push(`Peak mileage: ${ctx.past.peakMileage}`);
+    if (ctx.past.subThreeAttempts) parts.push(`Sub-three attempts: ${ctx.past.subThreeAttempts}`);
+    if (ctx.age) parts.push(`Age: ${ctx.age}`);
+    if (ctx.concerns) parts.push(`Concerns: ${ctx.concerns}`);
+    if (ctx.targetRaces) parts.push(`Target races: ${ctx.targetRaces}`);
+    return parts.length > 0 ? parts.join("\n") : "No details filled in yet.";
+  };
+
+  // Check if the runner has filled in any context directly
+  const hasUserContext = !!(
+    runnerContext.now.weeklyMileage ||
+    runnerContext.past.marathonsRun ||
+    runnerContext.past.bestMarathon ||
+    runnerContext.past.bestHalf ||
+    runnerContext.now.runsPerWeek
+  );
+
+  // Show the "review my context" CTA — evergreen, available any time
+  // the runner has filled in context and the companion isn't streaming
+  const showContextCTA =
+    hasStarted &&
+    !isStreaming &&
+    messages.length >= 2 &&
+    hasUserContext;
 
   // Handle sending — works for both typed input and starter taps
   const sendMessage = async (text: string) => {
@@ -106,6 +161,10 @@ export default function ChatPanel({
       if (!reader) throw new Error("No reader available");
 
       let accumulated = "";
+      let toolPlanGenerated = false;
+      let isToolThinking = false;
+      let textLengthAtThinking = 0;
+      const processedEvents = new Set<number>();
 
       while (true) {
         const { done, value } = await reader.read();
@@ -113,23 +172,56 @@ export default function ChatPanel({
 
         accumulated += decoder.decode(value, { stream: true });
 
-        // Aggressively strip any <context> or <plan> content from display.
-        // Handles: complete blocks, partial blocks, and edge cases with whitespace.
-        const displayText = stripHiddenBlocks(accumulated);
+        // Check for __EVENT__ protocol messages from tool calls
+        const eventPattern = /\n__EVENT__:(.*?)\n/g;
+        let eventMatch;
+        while ((eventMatch = eventPattern.exec(accumulated)) !== null) {
+          if (processedEvents.has(eventMatch.index)) continue;
+          processedEvents.add(eventMatch.index);
+
+          try {
+            const event = JSON.parse(eventMatch[1]);
+            if (event.type === "plan_generated" && event.plan) {
+              onPlanGenerated(event.plan);
+              toolPlanGenerated = true;
+            }
+            if (event.type === "thinking") {
+              isToolThinking = true;
+              // Snapshot how much visible text we had before the tool gap
+              const currentText = stripHiddenBlocks(
+                accumulated.replace(/\n__EVENT__:.*?\n/g, "")
+              );
+              textLengthAtThinking = currentText.length;
+            }
+          } catch {
+            // Ignore malformed events
+          }
+        }
+
+        // Strip events from display text
+        const textForDisplay = accumulated.replace(/\n__EVENT__:.*?\n/g, "");
+        const displayText = stripHiddenBlocks(textForDisplay);
+
+        // Once new text arrives after the thinking event, exit thinking state
+        if (isToolThinking && displayText.length > textLengthAtThinking) {
+          isToolThinking = false;
+        }
 
         setMessages((prev) => {
           const updated = [...prev];
           updated[updated.length - 1] = {
             role: "companion",
-            content: displayText,
+            // During tool thinking gap, show empty so the bolt reappears
+            content: isToolThinking ? "" : displayText,
           };
           return updated;
         });
       }
 
-      // Streaming complete — parse context and plan, clean up the message
+      // Streaming complete — strip events, then parse context and plan
+      const textOnly = accumulated.replace(/\n__EVENT__:.*?\n/g, "");
       const { cleanMessage: afterContext, updatedContext } =
-        parseContextFromMessage(accumulated, runnerContext);
+        parseContextFromMessage(textOnly, runnerContext);
       const { cleanMessage: afterPlan, plan } =
         parsePlanFromMessage(afterContext);
 
@@ -149,8 +241,8 @@ export default function ChatPanel({
       // Update the runner context in the dashboard
       onContextUpdate(updatedContext);
 
-      // If a plan was generated, trigger the plan tab
-      if (plan) {
+      // If a plan was generated via old <plan> block (fallback), trigger it
+      if (plan && !toolPlanGenerated) {
         onPlanGenerated(plan);
       }
     } catch (error) {
@@ -196,15 +288,64 @@ export default function ChatPanel({
         <div className="max-w-[768px] mx-auto px-6 py-6">
           {/* Welcome state — shown before conversation starts */}
           {!hasStarted && (
-            <div className="flex flex-col justify-center min-h-[60vh] text-center px-4">
-              <h3 className="text-2xl font-semibold text-foreground mb-3 tracking-tight">
-                2:59:59
-              </h3>
-              <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
-                You&apos;re here because you want to break three hours. I&apos;m
-                here to help. Let&apos;s start by getting to know you as a
-                runner.
-              </p>
+            <div className="flex flex-col justify-center min-h-[60vh] px-4">
+              {/* Hero */}
+              <div className="text-center">
+                <h3 className="text-2xl font-semibold text-foreground mb-3 tracking-tight">
+                  2:59:59
+                </h3>
+                <p className="text-sm text-muted max-w-md mx-auto leading-relaxed">
+                  You&apos;re here because you want to break three hours.
+                  I&apos;m here to help.
+                </p>
+              </div>
+
+              {/* Getting started checklist */}
+              <div className="max-w-sm mx-auto mt-8">
+                <p className="text-xs font-semibold text-foreground uppercase tracking-wider mb-4">
+                  How to get started
+                </p>
+                <ol className="space-y-3">
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full border border-accent/40 flex items-center justify-center mt-0.5">
+                      <span className="text-[10px] font-mono text-accent">1</span>
+                    </span>
+                    <span className="text-xs text-muted leading-relaxed">
+                      Fill out your{" "}
+                      <span className="text-accent font-medium">
+                        Runner Context
+                      </span>{" "}
+                      on the right as best you can
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full border border-accent/40 flex items-center justify-center mt-0.5">
+                      <span className="text-[10px] font-mono text-accent">2</span>
+                    </span>
+                    <span className="text-xs text-muted leading-relaxed">
+                      Tap{" "}
+                      <span className="text-accent font-medium">Apply</span>{" "}
+                      to let me review what you&apos;ve entered
+                    </span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full border border-accent/40 flex items-center justify-center mt-0.5">
+                      <span className="text-[10px] font-mono text-accent">3</span>
+                    </span>
+                    <span className="text-xs text-muted leading-relaxed">
+                      Answer any follow-up questions I have
+                    </span>
+                  </li>
+                </ol>
+
+                <p className="text-xs text-muted/60 leading-relaxed mt-5">
+                  I&apos;ll create a plan based on what I know. It can be
+                  adjusted as we go — as I learn more about you, or based on
+                  any requests or needs you have.
+                </p>
+              </div>
+
+              {/* Quick-start starters */}
               <div className="flex flex-wrap justify-center gap-2 mt-8">
                 {[
                   "I want to break 3 hours",
@@ -239,16 +380,10 @@ export default function ChatPanel({
                   {msg.role === "companion" ? (
                     <div className="max-w-full py-1">
                       <div className="text-sm leading-relaxed text-foreground">
-                        {/* Thinking dots — shown while waiting for first token */}
+                        {/* Thinking bolt — shown while waiting for first token */}
                         {isStreaming &&
                           i === messages.length - 1 &&
-                          !msg.content && (
-                            <div className="flex items-center gap-1 py-2">
-                              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "0ms" }} />
-                              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "150ms" }} />
-                              <div className="w-1.5 h-1.5 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: "300ms" }} />
-                            </div>
-                          )}
+                          !msg.content && <ThinkingBolt />}
                         {msg.content && <MessageContent text={msg.content} />}
                         {/* Streaming cursor — shown once text starts flowing */}
                         {isStreaming &&
@@ -268,6 +403,22 @@ export default function ChatPanel({
                   )}
                 </div>
               ))}
+              {/* Context review CTA — shown during onboarding when user has filled in context */}
+              {showContextCTA && (
+                <div className="flex justify-center mt-4">
+                  <button
+                    onClick={() => {
+                      const summary = buildContextSummary();
+                      sendMessage(
+                        `Read and review my updated runner context:\n${summary}`
+                      );
+                    }}
+                    className="text-xs text-accent border border-accent/30 rounded-full px-4 py-2 hover:bg-accent/10 hover:border-accent/50 transition-colors"
+                  >
+                    Review my updated context →
+                  </button>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
           )}

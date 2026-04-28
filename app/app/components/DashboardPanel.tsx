@@ -15,6 +15,7 @@ interface DashboardPanelProps {
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
   isBuildingPlan: boolean;
+  onRequestReview?: () => void;
 }
 
 export default function DashboardPanel({
@@ -24,6 +25,7 @@ export default function DashboardPanel({
   activeTab,
   onTabChange,
   isBuildingPlan,
+  onRequestReview,
 }: DashboardPanelProps) {
   // Live readiness data from the AI's assessment
   const readinessData = {
@@ -37,6 +39,16 @@ export default function DashboardPanel({
     { id: "log", label: "Log", enabled: false },
     { id: "settings", label: "Settings", enabled: false },
   ];
+
+  // Check if the runner still has mostly empty context
+  const contextIsEmpty = !(
+    runnerContext.now.weeklyMileage ||
+    runnerContext.now.longestRun ||
+    runnerContext.now.runsPerWeek ||
+    runnerContext.past.marathonsRun ||
+    runnerContext.past.bestMarathon ||
+    runnerContext.past.bestHalf
+  );
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -62,6 +74,12 @@ export default function DashboardPanel({
           <ReadinessNumbers
             data={readinessData}
             factors={runnerContext.readiness?.factors}
+            injuryFactors={runnerContext.readiness?.injuryFactors}
+            concerns={runnerContext.concerns}
+            onUpdateConcerns={(val) => {
+              const next = { ...runnerContext, concerns: val };
+              onContextUpdate(next);
+            }}
           />
         </div>
 
@@ -97,7 +115,44 @@ export default function DashboardPanel({
       <div className="flex-1 overflow-y-auto">
         {activeTab === "context" && (
           <div className="p-4">
-            <RunnerContext data={runnerContext} onUpdate={onContextUpdate} />
+            {contextIsEmpty ? (
+              <div className="mb-4 px-4 py-3 rounded-lg border border-accent/20 bg-accent/5">
+                <p className="text-xs text-foreground font-medium mb-1">
+                  Start here — tap any field to fill it in
+                </p>
+                <p className="text-[11px] text-muted leading-relaxed">
+                  The more I know about your running, the better I can coach
+                  you. Fill in what you can — the chat will pick up where you
+                  leave off.
+                </p>
+              </div>
+            ) : onRequestReview ? (
+              <div className="mb-4 flex justify-between items-center">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Runner Context
+                </h3>
+                <button
+                  onClick={onRequestReview}
+                  className="text-[11px] text-accent border border-accent/30 rounded-md px-3 py-1.5 hover:bg-accent/10 hover:border-accent/50 transition-colors flex items-center gap-1.5"
+                >
+                  <svg
+                    className="w-3 h-3"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182"
+                    />
+                  </svg>
+                  Apply
+                </button>
+              </div>
+            ) : null}
+            <RunnerContext data={runnerContext} onUpdate={onContextUpdate} hideHeader={!contextIsEmpty && !!onRequestReview} />
           </div>
         )}
 

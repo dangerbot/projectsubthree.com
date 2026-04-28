@@ -204,9 +204,11 @@ function EditableNarrative({
 export default function RunnerContext({
   data,
   onUpdate,
+  hideHeader = false,
 }: {
   data: RunnerContextType;
   onUpdate: (ctx: RunnerContextType) => void;
+  hideHeader?: boolean;
 }) {
   // Helper to update a nested field and push to parent
   const update = (path: string, value: string | null) => {
@@ -223,12 +225,14 @@ export default function RunnerContext({
 
   return (
     <div className="bg-surface rounded-xl border border-border overflow-hidden">
-      {/* Header — clean, no progress bar */}
-      <div className="px-4 py-3 border-b border-border">
-        <h3 className="text-sm font-semibold text-foreground">
-          Runner Context
-        </h3>
-      </div>
+      {/* Header — hidden when parent provides its own (e.g. with Apply button) */}
+      {!hideHeader && (
+        <div className="px-4 py-3 border-b border-border">
+          <h3 className="text-sm font-semibold text-foreground">
+            Runner Context
+          </h3>
+        </div>
+      )}
 
       <div className="p-4 space-y-5">
         {/* Runner Story */}
