@@ -1,6 +1,7 @@
 "use client";
 
-import type { TrainingPlan } from "../lib/training-plan";
+import { useState, useMemo } from "react";
+import type { TrainingPlan, PlanPhase, PlanWeek } from "../lib/training-plan";
 
 const typeColors: Record<string, string> = {
   easy: "text-accent",
@@ -32,7 +33,105 @@ const typeLabel: Record<string, string> = {
   race: "Race",
 };
 
-// Empty state shown before a plan is generated
+// ── Chevron icon ──────────────────────────────────────────────────────────────
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      className={`w-3.5 h-3.5 text-muted transition-transform duration-200 ${open ? "rotate-90" : ""}`}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2.5}
+    >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+// ── Collapsible Week ──────────────────────────────────────────────────────────
+
+function WeekRow({ week, isOpen, onToggle }: { week: PlanWeek; isOpen: boolean; onToggle: () => void }) {
+  return (
+    <div className="bg-surface rounded-lg border border-border overflow-hidden">
+      {/* Week header — clickable */}
+      <button
+        onClick={onToggle}
+        className="w-full px-3 py-2.5 flex items-center justify-between hover:bg-accent/5 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Chevron open={isOpen} />
+          <span className="text-xs font-semibold text-foreground">
+            {week.label}
+          </span>
+        </div>
+        <span className="text-[10px] text-muted font-mono">
+          ~{week.totalMiles} mi
+        </span>
+      </button>
+
+      {/* Daily workouts — collapsible */}
+      {isOpen && (
+        <div className="divide-y divide-border border-t border-border">
+          {week.workouts.map((workout, i) => (
+            <div
+              key={i}
+              className={`flex items-center gap-3 px-3 py-2 ${workout.type === "rest" ? "opacity-50" : ""}`}
+            >
+              {/* Day label */}
+              <span className="text-[10px] text-muted uppercase font-mono w-7 flex-shrink-0">
+                {workout.day}
+              </span>
+
+              {/* Type badge */}
+              <span
+                className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${typeBg[workout.type] || "bg-background"} ${typeColors[workout.type] || "text-muted"}`}
+              >
+                {typeLabel[workout.type] || workout.type}
+              </span>
+
+              {/* Distance */}
+              {workout.distance && (
+                <span className="text-xs font-mono text-foreground flex-shrink-0">
+                  {workout.distance}
+                  <span className="text-[10px] text-muted ml-0.5">mi</span>
+                </span>
+              )}
+
+              {/* Description */}
+              <span className="text-[10px] text-muted truncate flex-1">
+                {workout.description}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Phase Header ──────────────────────────────────────────────────────────────
+
+function PhaseHeader({ phase }: { phase: PlanPhase }) {
+  return (
+    <div className="pt-5 pb-2 first:pt-0">
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10px] font-mono text-accent uppercase tracking-wider">
+          Phase {phase.index}
+        </span>
+        <h4 className="text-sm font-semibold text-foreground">
+          {phase.shortName}
+        </h4>
+      </div>
+      <p className="text-[11px] text-muted leading-relaxed mt-1">
+        {phase.description}
+      </p>
+    </div>
+  );
+}
+
+// ── Empty & Building states ───────────────────────────────────────────────────
+
 function EmptyPlan() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
@@ -44,13 +143,12 @@ function EmptyPlan() {
       </h3>
       <p className="text-xs text-muted max-w-xs leading-relaxed">
         Complete your onboarding conversation and your coach will build a
-        personalized starter plan based on where you are today.
+        personalized plan based on where you are today.
       </p>
     </div>
   );
 }
 
-// Building animation shown when plan is being generated
 export function PlanBuilding() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
@@ -70,6 +168,8 @@ export function PlanBuilding() {
   );
 }
 
+// ── Main Component ────────────────────────────────────────────────────────────
+
 export default function TrainingPlanView({
   plan,
 }: {
@@ -77,72 +177,103 @@ export default function TrainingPlanView({
 }) {
   if (!plan) return <EmptyPlan />;
 
+  // Group weeks by phase
+  const phaseGroups = useMemo(() => {
+    const groups: Array<{ phase: PlanPhase | null; weeks: PlanWeek[] }> = [];
+
+    if (plan.phases.length > 0) {
+      // Build a map of phaseIndex → PlanPhase
+      const phaseMap = new Map<number, PlanPhase>();
+      for (const p of plan.phases) {
+        phaseMap.set(p.index, p);
+      }
+
+      let currentPhaseIndex = -1;
+      for (const week of plan.weeks) {
+        if (week.phaseIndex !== currentPhaseIndex) {
+          currentPhaseIndex = week.phaseIndex;
+          groups.push({
+            phase: phaseMap.get(currentPhaseIndex) ?? null,
+            weeks: [],
+          });
+        }
+        groups[groups.length - 1].weeks.push(week);
+      }
+    } else {
+      // No phase data — just one flat group
+      groups.push({ phase: null, weeks: plan.weeks });
+    }
+
+    return groups;
+  }, [plan]);
+
+  // Track which weeks are open — default: first week of first phase
+  const [openWeeks, setOpenWeeks] = useState<Set<number>>(() => {
+    const initial = new Set<number>();
+    if (plan.weeks.length > 0) {
+      initial.add(plan.weeks[0].weekNumber);
+    }
+    return initial;
+  });
+
+  const toggleWeek = (weekNumber: number) => {
+    setOpenWeeks((prev) => {
+      const next = new Set(prev);
+      if (next.has(weekNumber)) {
+        next.delete(weekNumber);
+      } else {
+        next.add(weekNumber);
+      }
+      return next;
+    });
+  };
+
+  const expandAll = () => {
+    setOpenWeeks(new Set(plan.weeks.map((w) => w.weekNumber)));
+  };
+
+  const collapseAll = () => {
+    setOpenWeeks(new Set());
+  };
+
+  const allExpanded = openWeeks.size === plan.weeks.length;
+
   return (
-    <div className="space-y-4">
+    <div>
       {/* Plan header */}
-      <div className="px-4 pt-4">
+      <div className="px-4 pt-4 pb-2">
         <div className="flex items-center justify-between mb-1">
           <h3 className="text-sm font-semibold text-foreground">
             {plan.phase}
           </h3>
-          <span className="text-[10px] text-muted font-mono">
-            {plan.weeks.length} weeks
-          </span>
+          <button
+            onClick={allExpanded ? collapseAll : expandAll}
+            className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium"
+          >
+            {allExpanded ? "Collapse all" : "Expand all"}
+          </button>
         </div>
-        <p className="text-xs text-muted-light leading-relaxed">
+        <p className="text-[11px] text-muted leading-relaxed">
           {plan.summary}
         </p>
       </div>
 
-      {/* Weeks */}
-      <div className="space-y-3 px-4 pb-4">
-        {plan.weeks.map((week) => (
-          <div
-            key={week.weekNumber}
-            className="bg-surface rounded-xl border border-border overflow-hidden"
-          >
-            {/* Week header */}
-            <div className="px-3 py-2.5 border-b border-border flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">
-                {week.label}
-              </span>
-              <span className="text-[10px] text-muted font-mono">
-                ~{week.totalMiles} mi
-              </span>
-            </div>
+      {/* Phase groups */}
+      <div className="px-4 pb-4">
+        {phaseGroups.map((group, gi) => (
+          <div key={gi}>
+            {/* Phase header */}
+            {group.phase && <PhaseHeader phase={group.phase} />}
 
-            {/* Daily workouts */}
-            <div className="divide-y divide-border">
-              {week.workouts.map((workout, i) => (
-                <div
-                  key={i}
-                  className={`flex items-center gap-3 px-3 py-2 ${workout.type === "rest" ? "opacity-50" : ""}`}
-                >
-                  {/* Day label */}
-                  <span className="text-[10px] text-muted uppercase font-mono w-7 flex-shrink-0">
-                    {workout.day}
-                  </span>
-
-                  {/* Type badge */}
-                  <span
-                    className={`text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded ${typeBg[workout.type] || "bg-background"} ${typeColors[workout.type] || "text-muted"}`}
-                  >
-                    {typeLabel[workout.type] || workout.type}
-                  </span>
-
-                  {/* Distance */}
-                  {workout.distance && (
-                    <span className="text-xs font-mono text-foreground flex-shrink-0">
-                      {workout.distance}
-                      <span className="text-[10px] text-muted ml-0.5">mi</span>
-                    </span>
-                  )}
-
-                  {/* Description */}
-                  <span className="text-[10px] text-muted truncate flex-1">
-                    {workout.description}
-                  </span>
-                </div>
+            {/* Weeks in this phase */}
+            <div className="space-y-2 mt-2">
+              {group.weeks.map((week) => (
+                <WeekRow
+                  key={week.weekNumber}
+                  week={week}
+                  isOpen={openWeeks.has(week.weekNumber)}
+                  onToggle={() => toggleWeek(week.weekNumber)}
+                />
               ))}
             </div>
           </div>

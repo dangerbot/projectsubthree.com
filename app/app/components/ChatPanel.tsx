@@ -92,6 +92,34 @@ export default function ChatPanel({
     return parts.length > 0 ? parts.join("\n") : "No details filled in yet.";
   };
 
+  // Demo shortcut — pre-fills context and sends a summary message
+  const triggerDemo = () => {
+    const demoContext = {
+      ...runnerContext,
+      now: {
+        weeklyMileage: "24",
+        longestRun: "6",
+        runsPerWeek: "4",
+        currentFeeling: "good",
+      },
+      past: {
+        marathonsRun: "1",
+        bestMarathon: "3:15",
+        bestMarathonDate: "2 months ago",
+        lastMarathon: "2 months ago",
+        lastMarathonTime: "3:15",
+        bestHalf: null,
+        peakMileage: "50",
+        subThreeAttempts: null,
+      },
+      story: "Ran my first marathon 2 months ago in 3:15. Peak mileage was 50 miles/week. Currently maintaining 24 miles/week across 4 runs. Ready to chase sub-3.",
+    };
+    onContextUpdate(demoContext);
+    sendMessage(
+      `Read and review my updated runner context:\nLast marathon: 3:15 (2 months ago)\nLongest run: 20 miles (a few weeks before the marathon)\nPeak mileage: 50 mi/wk\nCurrently running: 4 days/week, 6 miles each, 24 miles total\nNo target race date yet`
+    );
+  };
+
   // Check if the runner has filled in any context directly
   const hasUserContext = !!(
     runnerContext.now.weeklyMileage ||
@@ -361,6 +389,12 @@ export default function ChatPanel({
                     {starter}
                   </button>
                 ))}
+                <button
+                  onClick={triggerDemo}
+                  className="text-xs text-muted/40 border border-border/40 rounded-full px-4 py-2 hover:border-accent/40 hover:text-accent transition-colors"
+                >
+                  Let&apos;s Go
+                </button>
               </div>
             </div>
           )}

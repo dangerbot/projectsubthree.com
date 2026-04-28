@@ -18,12 +18,24 @@ export interface PlanWeek {
   weekNumber: number; // 1, 2, etc.
   label: string; // e.g. "Week 1 — Assessment"
   totalMiles: string; // e.g. "18-22"
+  phaseIndex: number; // Which phase this week belongs to
+  isRestWeek: boolean;
   workouts: Workout[];
+}
+
+export interface PlanPhase {
+  index: number;
+  name: string; // e.g. "Phase 0 — Pre-Phase"
+  shortName: string; // e.g. "Pre-Phase"
+  description: string; // 1-2 line description
+  startWeek: number;
+  endWeek: number;
 }
 
 export interface TrainingPlan {
   phase: string; // e.g. "2-Week Assessment", "Base Building Phase 1"
   summary: string; // Brief explanation of the plan's purpose
+  phases: PlanPhase[];
   weeks: PlanWeek[];
   generatedAt: string; // ISO timestamp
 }
@@ -53,19 +65,39 @@ export function convertGeneratedPlan(generated: {
   totalWeeks?: number;
   generatedAt?: string;
 }): TrainingPlan {
-  // Group weeks by phase for the summary
+  // Build phase metadata
+  const phases: PlanPhase[] = (generated.phases ?? []).map((p, i) => ({
+    index: i,
+    name: `Phase ${i} — ${p.shortName}`,
+    shortName: p.shortName,
+    description: p.description,
+    startWeek: p.startWeek,
+    endWeek: p.endWeek,
+  }));
+
   const phaseName = generated.phases?.[0]?.name ?? "Training Plan";
   const summary = generated.phases
     ?.map((p) => `${p.shortName} (${p.startWeek}-${p.endWeek})`)
     .join(" → ") ?? "";
 
+  // Build a lookup: weekNumber → phaseIndex
+  const weekToPhase: Record<number, number> = {};
+  for (const p of phases) {
+    for (let w = p.startWeek; w <= p.endWeek; w++) {
+      weekToPhase[w] = p.index;
+    }
+  }
+
   return {
     phase: `${generated.totalWeeks ?? 0}-Week Plan`,
     summary: `${phaseName} through Race Week. ${summary}`,
+    phases,
     weeks: (generated.weeks ?? []).map((w) => ({
       weekNumber: w.weekNumber,
       label: `Week ${w.weekNumber} — ${w.phaseShortName}${w.isRestWeek ? " (Rest)" : ""}`,
       totalMiles: String(w.totalMiles),
+      phaseIndex: weekToPhase[w.weekNumber] ?? 0,
+      isRestWeek: w.isRestWeek,
       workouts: w.workouts.map((wo) => ({
         day: wo.day,
         type: (wo.type === "threshold" || wo.type === "yasso" || wo.type === "fartlek"
@@ -102,10 +134,13 @@ export function parsePlanFromMessage(
     const plan: TrainingPlan = {
       phase: parsed.phase || "Training Plan",
       summary: parsed.summary || "",
+      phases: [],
       weeks: (parsed.weeks || []).map((w: Record<string, unknown>, i: number) => ({
         weekNumber: w.weekNumber || i + 1,
         label: w.label || `Week ${i + 1}`,
         totalMiles: w.totalMiles || "—",
+        phaseIndex: 0,
+        isRestWeek: false,
         workouts: ((w.workouts as Array<Record<string, unknown>>) || []).map((wo: Record<string, unknown>) => ({
           day: wo.day || "",
           type: wo.type || "easy",

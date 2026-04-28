@@ -55,7 +55,7 @@ export default function Home() {
       <div className="w-px bg-border" />
 
       {/* Right: Dashboard */}
-      <div className="w-[440px] flex-shrink-0">
+      <div className="w-[660px] flex-shrink-0">
         <DashboardPanel
           runnerContext={runnerContext}
           onContextUpdate={setRunnerContext}
