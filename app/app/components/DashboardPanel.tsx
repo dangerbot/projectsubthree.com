@@ -16,6 +16,8 @@ interface DashboardPanelProps {
   onTabChange: (tab: Tab) => void;
   isBuildingPlan: boolean;
   onRequestReview?: () => void;
+  onSignOut?: () => void;
+  userEmail?: string;
 }
 
 export default function DashboardPanel({
@@ -26,6 +28,8 @@ export default function DashboardPanel({
   onTabChange,
   isBuildingPlan,
   onRequestReview,
+  onSignOut,
+  userEmail,
 }: DashboardPanelProps) {
   // Live readiness data from the AI's assessment
   const readinessData = {
@@ -37,7 +41,7 @@ export default function DashboardPanel({
     { id: "context", label: "Context", enabled: true },
     { id: "plan", label: "Plan", enabled: true },
     { id: "log", label: "Log", enabled: false },
-    { id: "settings", label: "Settings", enabled: false },
+    { id: "settings", label: "Settings", enabled: true },
   ];
 
   // Check if the runner still has mostly empty context
@@ -182,16 +186,35 @@ export default function DashboardPanel({
         )}
 
         {activeTab === "settings" && (
-          <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <div className="text-3xl font-mono font-bold text-border-light mb-3">
-              —
+          <div className="p-4 space-y-6">
+            {/* Account */}
+            <div className="bg-surface rounded-xl border border-border overflow-hidden">
+              <div className="px-4 py-3 border-b border-border">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Account
+                </h3>
+              </div>
+              <div className="p-4 space-y-4">
+                {userEmail && (
+                  <div>
+                    <div className="text-[10px] text-muted uppercase tracking-wider mb-1">
+                      Email
+                    </div>
+                    <div className="text-sm text-foreground font-mono">
+                      {userEmail}
+                    </div>
+                  </div>
+                )}
+                {onSignOut && (
+                  <button
+                    onClick={onSignOut}
+                    className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Sign out
+                  </button>
+                )}
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-foreground mb-2">
-              Settings
-            </h3>
-            <p className="text-xs text-muted max-w-xs leading-relaxed">
-              Preferences, integrations, and account settings. Coming soon.
-            </p>
           </div>
         )}
       </div>
