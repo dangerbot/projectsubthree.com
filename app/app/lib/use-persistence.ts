@@ -20,9 +20,15 @@ export function usePersistence(userId: string | undefined) {
   // Track whether initial load is done — prevents saving stale data
   const hasLoaded = useRef(false);
 
+  // Guard against React strict mode double-invocation (and any other
+  // concurrent re-mount). Without this the load() runs twice and the
+  // second insert races the first.
+  const loadStarted = useRef(false);
+
   // ── Load on mount ───────────────────────────────────────────────────────
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || loadStarted.current) return;
+    loadStarted.current = true;
 
     async function load() {
       try {
@@ -34,18 +40,23 @@ export function usePersistence(userId: string | undefined) {
           .single();
 
         if (runnerErr && runnerErr.code === "PGRST116") {
-          // No row yet — create one
+          // No row yet — create one. Use upsert with ignoreDuplicates so
+          // concurrent callers (e.g. another tab) don't blow up with a
+          // duplicate-key error; whichever insert wins, the others no-op.
           const { data: session } = await supabase.auth.getSession();
           const email = session?.session?.user?.email ?? "";
-          const { error: insertErr } = await supabase.from("runners").insert({
-            id: userId,
-            email,
-            context: EMPTY_CONTEXT,
-          });
-          if (insertErr) {
-            console.error("Failed to create runner row:", insertErr);
+          const { error: upsertErr } = await supabase.from("runners").upsert(
+            {
+              id: userId,
+              email,
+              context: EMPTY_CONTEXT,
+            },
+            { onConflict: "id", ignoreDuplicates: true }
+          );
+          if (upsertErr) {
+            console.error("Failed to create runner row:", upsertErr);
           } else {
-            console.log("Created new runner row");
+            console.log("Created (or found existing) runner row");
           }
           setLoadedContext(EMPTY_CONTEXT);
         } else if (runnerErr) {
