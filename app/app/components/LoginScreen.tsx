@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { supabase } from "../lib/supabase";
 
 export default function LoginScreen() {
@@ -9,9 +10,10 @@ export default function LoginScreen() {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const handleSendOtp = async () => {
-    if (!email.trim()) return;
+    if (!email.trim() || !acceptedTerms) return;
     setLoading(true);
     setError(null);
 
@@ -86,9 +88,30 @@ export default function LoginScreen() {
               <p className="text-xs text-red-400 mt-2">{error}</p>
             )}
 
+            {/* Prototype terms — required before continue */}
+            <label className="flex items-start gap-2.5 mt-5 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-accent cursor-pointer flex-shrink-0"
+              />
+              <span className="text-[12px] text-muted-light leading-relaxed">
+                I understand this is a prototype and accept the{" "}
+                <Link
+                  href="/terms"
+                  target="_blank"
+                  className="text-accent hover:underline"
+                >
+                  Terms of Use
+                </Link>
+                .
+              </span>
+            </label>
+
             <button
               onClick={handleSendOtp}
-              disabled={!email.trim() || loading}
+              disabled={!email.trim() || loading || !acceptedTerms}
               className="w-full mt-4 px-4 py-3 rounded-lg bg-accent text-background text-sm font-semibold disabled:opacity-30 disabled:cursor-not-allowed hover:brightness-110 transition-all"
             >
               {loading ? "Sending code..." : "Continue"}
@@ -96,7 +119,8 @@ export default function LoginScreen() {
 
             <p className="text-[11px] text-muted/50 text-center mt-6 leading-relaxed">
               We&apos;ll send a 6-digit code to verify your email.
-              No password needed.
+              No password needed. This is a personal prototype — things may
+              break.
             </p>
           </>
         ) : (

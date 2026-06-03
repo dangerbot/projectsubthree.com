@@ -386,7 +386,15 @@ export default function Landing() {
       <footer className="border-t border-border/50 px-6 py-10">
         <div className="max-w-[960px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-[11px] tracking-wider text-muted/60">
           <span>projectsubthree.com</span>
-          <span>An experiment in AI-native consumer product</span>
+          <div className="flex items-center gap-6">
+            <Link
+              href="/terms"
+              className="hover:text-foreground transition"
+            >
+              Terms
+            </Link>
+            <span>An experiment in AI-native consumer product</span>
+          </div>
         </div>
       </footer>
 
