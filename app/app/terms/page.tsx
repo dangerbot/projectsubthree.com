@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import MarketingNav from "../components/MarketingNav";
 
 export const metadata: Metadata = {
   title: "Terms of Use — Project Sub Three",
@@ -10,15 +11,9 @@ export const metadata: Metadata = {
 export default function Terms() {
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <article className="max-w-[680px] mx-auto px-6 py-20">
-        <Link
-          href="/"
-          className="text-[11px] tracking-[0.3em] uppercase text-muted hover:text-foreground transition"
-        >
-          ← Back
-        </Link>
-
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mt-10 mb-3">
+      <MarketingNav />
+      <article className="max-w-[680px] mx-auto px-6 pt-14 pb-20">
+        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
           Terms of Use
         </h1>
         <p className="text-sm text-muted mb-12">

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Link from "next/link";
+import MarketingNav from "./components/MarketingNav";
 
 /**
  * Marketing page. The hero (animated time, pace grid, tagline) is ported
@@ -95,8 +96,9 @@ export default function Landing() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
+      <MarketingNav />
       {/* ───── HERO ───────────────────────────────────────────────────── */}
-      <section className="relative px-6 pt-20 pb-24 max-w-[720px] mx-auto">
+      <section className="relative px-6 pt-16 pb-24 max-w-[720px] mx-auto">
         <div
           className="pointer-events-none fixed inset-0 -z-10"
           style={{
