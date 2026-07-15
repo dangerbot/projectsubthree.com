@@ -58,10 +58,10 @@ export default function Terms() {
           You can ask us to delete your account and everything tied to it at
           any time. Email{" "}
           <a
-            href="mailto:steve@projectsub3.com"
+            href="mailto:steve@projectsubthree.com"
             className="text-accent hover:underline"
           >
-            steve@projectsub3.com
+            steve@projectsubthree.com
           </a>{" "}
           with the address you signed up with and we&apos;ll take care of it.
         </Section>
@@ -83,10 +83,10 @@ export default function Terms() {
         <p className="text-sm text-muted-light mt-16">
           Questions? Reach out:{" "}
           <a
-            href="mailto:steve@projectsub3.com"
+            href="mailto:steve@projectsubthree.com"
             className="text-accent hover:underline"
           >
-            steve@projectsub3.com
+            steve@projectsubthree.com
           </a>
         </p>
 
