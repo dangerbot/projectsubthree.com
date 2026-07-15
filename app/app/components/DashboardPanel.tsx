@@ -63,13 +63,40 @@ export default function DashboardPanel({
           <div>
             <h2 className="text-sm font-semibold text-foreground">Dashboard</h2>
           </div>
-          <div className="text-right">
-            <div className="text-[9px] text-muted uppercase tracking-wider">
-              Target
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <div className="text-[9px] text-muted uppercase tracking-wider">
+                Target
+              </div>
+              <div className="text-sm font-mono font-bold text-accent">
+                2:59:59
+              </div>
             </div>
-            <div className="text-sm font-mono font-bold text-accent">
-              2:59:59
-            </div>
+            {onSignOut && (
+              <button
+                onClick={onSignOut}
+                title={userEmail ? `Sign out ${userEmail}` : "Sign out"}
+                aria-label="Sign out"
+                className="flex items-center justify-center w-8 h-8 rounded-md text-muted hover:text-foreground hover:bg-surface transition-colors"
+              >
+                {/* Simple logout icon (door + arrow) */}
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
