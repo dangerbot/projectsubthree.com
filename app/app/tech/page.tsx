@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import MarketingNav from "../components/MarketingNav";
+import ArchitectureDiagram from "../components/ArchitectureDiagram";
 
 export const metadata: Metadata = {
   title: "The Tech — Project Sub Three",
@@ -185,6 +186,27 @@ export default function Tech() {
             one deploy, no separate backend service.
           </p>
         </Section>
+
+        <Section title="The architecture">
+          <p>
+            Zoom out and this is what we&apos;re building toward: an
+            architecture that uses the right AI model for the right moment,
+            the right skill for each action, and keeps one source of truth
+            about the runner underneath it all. Today, one general-purpose
+            model handles every job. Tomorrow, specialists — because the
+            fastest, sharpest experience comes from picking the right brain
+            for the task, not asking one brain to do everything.
+          </p>
+        </Section>
+
+        {/* Diagram — full-width, breaks out of the article column for legibility */}
+        <div className="not-prose -mx-2 md:-mx-8 mb-12 rounded-xl border border-border/40 bg-surface/30 p-4 md:p-6 overflow-x-auto">
+          <ArchitectureDiagram />
+          <p className="text-[11px] text-muted/70 mt-3 text-center italic">
+            Aspirational architecture — how the pieces are meant to fit as
+            the companion matures.
+          </p>
+        </div>
 
         <div className="mt-16 pt-8 border-t border-border/50 flex flex-wrap items-center justify-between gap-4">
           <Link
