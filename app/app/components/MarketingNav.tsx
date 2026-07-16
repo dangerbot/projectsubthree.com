@@ -13,6 +13,7 @@ export default function MarketingNav() {
 
   const links: { href: string; label: string }[] = [
     { href: "/method", label: "The Method" },
+    { href: "/training", label: "The Training" },
     { href: "/tech", label: "The Tech" },
     { href: "/terms", label: "Terms" },
   ];
