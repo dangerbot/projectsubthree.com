@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import MessageContent from "./MessageContent";
 import ThinkingBolt from "./ThinkingBolt";
 import {
@@ -304,10 +305,16 @@ export default function ChatPanel({
       {/* Header */}
       <div className="border-b border-border">
         <div className="max-w-[768px] mx-auto px-6 py-4">
-          <h2 className="text-sm font-semibold text-foreground tracking-tight">
-            Sub Three
-          </h2>
-          <p className="text-[10px] text-muted">Your AI training companion</p>
+          <Link
+            href="/"
+            title="Back to projectsubthree.com"
+            className="inline-block group"
+          >
+            <h2 className="text-sm font-semibold text-foreground tracking-tight group-hover:text-accent transition-colors">
+              Sub Three
+            </h2>
+            <p className="text-[10px] text-muted">Your AI training companion</p>
+          </Link>
         </div>
       </div>
 

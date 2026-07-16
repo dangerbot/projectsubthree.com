@@ -12,6 +12,17 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
 
+  // Where the email link lands after Supabase verifies it.
+  // Use the canonical domain in production (never the vercel.app alias);
+  // keep the local origin during development.
+  const getEmailRedirectTo = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    const isLocal =
+      origin.startsWith("http://localhost") ||
+      origin.startsWith("http://127.");
+    return `${isLocal ? origin : "https://www.projectsubthree.com"}/companion`;
+  };
+
   const handleSendOtp = async () => {
     if (!email.trim() || !acceptedTerms) return;
     setLoading(true);
@@ -19,7 +30,10 @@ export default function LoginScreen() {
 
     const { error: err } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        emailRedirectTo: getEmailRedirectTo(),
+      },
     });
 
     setLoading(false);
