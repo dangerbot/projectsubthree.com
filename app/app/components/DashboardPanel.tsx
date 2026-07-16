@@ -106,6 +106,7 @@ export default function DashboardPanel({
             data={readinessData}
             factors={runnerContext.readiness?.factors}
             injuryFactors={runnerContext.readiness?.injuryFactors}
+            planWeeks={trainingPlan ? trainingPlan.weeks.length : null}
             concerns={runnerContext.concerns}
             onUpdateConcerns={(val) => {
               const next = { ...runnerContext, concerns: val };
