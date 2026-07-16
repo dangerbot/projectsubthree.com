@@ -307,7 +307,9 @@ export default function ChatPanel({
         <div className="max-w-[768px] mx-auto px-6 py-4">
           <Link
             href="/"
-            title="Back to projectsubthree.com"
+            target="_blank"
+            rel="noopener"
+            title="Open projectsubthree.com in a new tab"
             className="inline-block group"
           >
             <h2 className="text-sm font-semibold text-foreground tracking-tight group-hover:text-accent transition-colors">
